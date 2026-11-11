@@ -27,6 +27,8 @@ import io
 import logging
 import random
 import re
+import base64
+import pathlib
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -123,6 +125,34 @@ COLOR_GOOD, COLOR_BAD, COLOR_WARN, COLOR_BLUE = "#16a34a", "#dc2626", "#f59e0b",
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 log = logging.getLogger("attendance_app")
+
+
+def add_logo(path="logo.png", height=40):
+    try:
+        data = base64.b64encode(pathlib.Path(path).read_bytes()).decode()
+    except FileNotFoundError:
+        return  # no logo file found: site loads normally
+    st.markdown(f"""
+    <style>
+    header[data-testid="stHeader"]::before {{
+        content: "";
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        height: {height}px;
+        width: {int(height * 1.08)}px;
+        background: url("data:image/png;base64,{data}") no-repeat left center / contain;
+        pointer-events: none;
+    }}
+    @media (max-width: 640px) {{
+        header[data-testid="stHeader"]::before {{
+            height: {int(height * 0.8)}px;
+            width: {int(height * 0.8 * 1.08)}px;
+        }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------
@@ -1519,6 +1549,7 @@ ROUTES = {
 # ---------------------------------------------------------------------
 def main():
     st.set_page_config(page_title=APP_TITLE, page_icon="🎓", layout="wide")
+    add_logo()
     st.markdown(CSS, unsafe_allow_html=True)
     get_log_handler()
     init_state()
